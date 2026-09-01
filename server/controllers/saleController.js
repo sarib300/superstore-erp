@@ -1,9 +1,11 @@
 const Sale = require("../models/Sale");
 const Product = require("../models/Product");
+const Customer = require("../models/Customer");
 
 const generateSaleNumber = () => {
   return `SAL-${Date.now()}`;
 };
+
 
 // GET /api/sales
 const getSales = async (req, res) => {
@@ -12,6 +14,10 @@ const getSales = async (req, res) => {
       .populate(
         "items.product",
         "name sku unit"
+      )
+      .populate(
+        "customer",
+        "name phone email"
       )
       .sort({
         createdAt: -1,
@@ -32,15 +38,21 @@ const getSales = async (req, res) => {
   }
 };
 
+
 // GET /api/sales/:id
 const getSaleById = async (req, res) => {
   try {
     const sale = await Sale.findById(
       req.params.id
-    ).populate(
-      "items.product",
-      "name sku unit category"
-    );
+    )
+      .populate(
+        "items.product",
+        "name sku unit category"
+      )
+      .populate(
+        "customer",
+        "name phone email address city"
+      );
 
     if (!sale) {
       return res.status(404).json({
@@ -70,17 +82,23 @@ const getSaleById = async (req, res) => {
   }
 };
 
+
 // POST /api/sales
 const createSale = async (req, res) => {
   try {
     const {
-      customerName,
+      customer,
       items,
       discount,
       paymentMethod,
       saleDate,
       notes,
     } = req.body;
+
+
+    // =========================
+    // VALIDATE ITEMS
+    // =========================
 
     if (
       !Array.isArray(items) ||
@@ -93,12 +111,59 @@ const createSale = async (req, res) => {
       });
     }
 
+
+    // =========================
+    // RESOLVE CUSTOMER
+    // =========================
+
+    let customerId = null;
+
+    let resolvedCustomerName =
+      "Walk-in Customer";
+
+    if (customer) {
+      const selectedCustomer =
+        await Customer.findById(customer);
+
+      if (!selectedCustomer) {
+        return res.status(404).json({
+          success: false,
+          message: "Customer not found",
+        });
+      }
+
+      if (
+        selectedCustomer.status !== "active"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Selected customer is inactive",
+        });
+      }
+
+      customerId =
+        selectedCustomer._id;
+
+      resolvedCustomerName =
+        selectedCustomer.name;
+    }
+
+
+    // =========================
+    // BUILD SALE ITEMS
+    // =========================
+
     const saleItems = [];
-    const usedProducts = new Set();
+
+    const usedProducts =
+      new Set();
 
     let subtotalAmount = 0;
 
+
     for (const item of items) {
+
       if (!item.product) {
         return res.status(400).json({
           success: false,
@@ -107,7 +172,12 @@ const createSale = async (req, res) => {
         });
       }
 
-      if (usedProducts.has(item.product)) {
+
+      if (
+        usedProducts.has(
+          item.product
+        )
+      ) {
         return res.status(400).json({
           success: false,
           message:
@@ -115,9 +185,15 @@ const createSale = async (req, res) => {
         });
       }
 
-      usedProducts.add(item.product);
 
-      const quantity = Number(item.quantity);
+      usedProducts.add(
+        item.product
+      );
+
+
+      const quantity =
+        Number(item.quantity);
+
 
       if (
         !Number.isInteger(quantity) ||
@@ -130,9 +206,12 @@ const createSale = async (req, res) => {
         });
       }
 
-      const product = await Product.findById(
-        item.product
-      );
+
+      const product =
+        await Product.findById(
+          item.product
+        );
+
 
       if (!product) {
         return res.status(404).json({
@@ -142,194 +221,304 @@ const createSale = async (req, res) => {
         });
       }
 
-      if (product.status !== "active") {
+
+      if (
+        product.status !== "active"
+      ) {
         return res.status(400).json({
           success: false,
-          message: `${product.name} is inactive`,
+          message:
+            `${product.name} is inactive`,
         });
       }
 
-      if (quantity > product.quantity) {
+
+      if (
+        quantity >
+        product.quantity
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient stock for ${product.name}. Only ${product.quantity} ${product.unit} available.`,
+          message:
+            `Insufficient stock for ${product.name}. Only ${product.quantity} ${product.unit} available.`,
         });
       }
 
       const sellingPrice =
-        Number(product.sellingPrice);
-
-      const subtotal =
-        quantity * sellingPrice;
-
-      subtotalAmount += subtotal;
-
-      saleItems.push({
-        product: product._id,
-        productName: product.name,
-        sku: product.sku,
-        quantity,
-        sellingPrice,
-        subtotal,
-      });
-    }
-
-    const discountAmount =
-      Number(discount) || 0;
-
-    if (
-      !Number.isFinite(discountAmount) ||
-      discountAmount < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Discount must be a valid non-negative number",
-      });
-    }
-
-    if (discountAmount > subtotalAmount) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Discount cannot be greater than subtotal",
-      });
-    }
-
-    const totalAmount =
-      subtotalAmount - discountAmount;
-
-    const sale = await Sale.create({
-      saleNumber: generateSaleNumber(),
-
-      customerName:
-        customerName?.trim() ||
-        "Walk-in Customer",
-
-      items: saleItems,
-
-      subtotalAmount,
-
-      discount: discountAmount,
-
-      totalAmount,
-
-      paymentMethod:
-        paymentMethod || "cash",
-
-      saleDate:
-        saleDate || new Date(),
-
-      notes: notes?.trim() || "",
-
-      status: "completed",
-    });
-
-    try {
-      const stockOperations =
-        saleItems.map((item) => ({
-          updateOne: {
-            filter: {
-              _id: item.product,
-              quantity: {
-                $gte: item.quantity,
-              },
-            },
-
-            update: {
-              $inc: {
-                quantity: -item.quantity,
-              },
-            },
-          },
-        }));
-
-      const result =
-        await Product.bulkWrite(
-          stockOperations
+        Number(
+          product.sellingPrice
         );
 
+      const purchasePrice =
+        Number(
+          product.purchasePrice
+        ) || 0;
+
+      const subtotal =
+        quantity *
+        sellingPrice;
+
+
+      subtotalAmount +=
+        subtotal;
+
+
+      saleItems.push({
+        product:
+          product._id,
+
+        productName:
+          product.name,
+
+        sku:
+          product.sku,
+
+        quantity,
+
+        sellingPrice,
+
+        purchasePrice,
+
+        subtotal,
+      });
+
+    }
+      // =========================
+      // DISCOUNT
+      // =========================
+
+      const discountAmount =
+        Number(discount) || 0;
+
+
       if (
-        result.modifiedCount !==
-        saleItems.length
+        !Number.isFinite(
+          discountAmount
+        ) ||
+        discountAmount < 0
       ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Discount must be a valid non-negative number",
+        });
+      }
+
+
+      if (
+        discountAmount >
+        subtotalAmount
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Discount cannot be greater than subtotal",
+        });
+      }
+
+
+      const totalAmount =
+        subtotalAmount -
+        discountAmount;
+
+
+      // =========================
+      // CREATE SALE
+      // =========================
+
+      const sale =
+        await Sale.create({
+
+          saleNumber:
+            generateSaleNumber(),
+
+          customer:
+            customerId,
+
+          customerName:
+            resolvedCustomerName,
+
+          items:
+            saleItems,
+
+          subtotalAmount,
+
+          discount:
+            discountAmount,
+
+          totalAmount,
+
+          paymentMethod:
+            paymentMethod ||
+            "cash",
+
+          saleDate:
+            saleDate ||
+            new Date(),
+
+          notes:
+            notes?.trim() ||
+            "",
+
+          status:
+            "completed",
+        });
+
+
+      // =========================
+      // UPDATE STOCK
+      // =========================
+
+      try {
+
+        const stockOperations =
+          saleItems.map(
+            (item) => ({
+              updateOne: {
+                filter: {
+                  _id:
+                    item.product,
+
+                  quantity: {
+                    $gte:
+                      item.quantity,
+                  },
+                },
+
+                update: {
+                  $inc: {
+                    quantity:
+                      -item.quantity,
+                  },
+                },
+              },
+            })
+          );
+
+
+        const result =
+          await Product.bulkWrite(
+            stockOperations
+          );
+
+
+        if (
+          result.modifiedCount !==
+          saleItems.length
+        ) {
+
+          await Sale.findByIdAndDelete(
+            sale._id
+          );
+
+          return res.status(400).json({
+            success: false,
+            message:
+              "Stock changed before sale could be completed. Please try again.",
+          });
+        }
+
+      } catch (stockError) {
+
         await Sale.findByIdAndDelete(
           sale._id
         );
 
+        throw stockError;
+      }
+
+
+      // =========================
+      // POPULATE RESPONSE
+      // =========================
+
+      const populatedSale =
+        await Sale.findById(
+          sale._id
+        )
+          .populate(
+            "items.product",
+            "name sku unit"
+          )
+          .populate(
+            "customer",
+            "name phone email"
+          );
+
+
+      res.status(201).json({
+        success: true,
+        message:
+          "Sale completed and stock updated successfully",
+        data:
+          populatedSale,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Create sale error:",
+        error
+      );
+
+
+      if (
+        error.name ===
+        "CastError"
+      ) {
         return res.status(400).json({
           success: false,
           message:
-            "Stock changed before sale could be completed. Please try again.",
+            "Invalid product or customer ID",
         });
       }
-    } catch (stockError) {
-      await Sale.findByIdAndDelete(
-        sale._id
-      );
 
-      throw stockError;
-    }
 
-    const populatedSale =
-      await Sale.findById(
-        sale._id
-      ).populate(
-        "items.product",
-        "name sku unit"
-      );
+      if (
+        error.name ===
+        "ValidationError"
+      ) {
 
-    res.status(201).json({
-      success: true,
-      message:
-        "Sale completed and stock updated successfully",
-      data: populatedSale,
-    });
-  } catch (error) {
-    console.error(
-      "Create sale error:",
-      error
-    );
+        const messages =
+          Object.values(
+            error.errors
+          ).map(
+            (err) =>
+              err.message
+          );
 
-    if (error.name === "CastError") {
-      return res.status(400).json({
+
+        return res.status(400).json({
+          success: false,
+          message:
+            messages.join(", "),
+        });
+      }
+
+
+      if (
+        error.code ===
+        11000
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "Duplicate sale number. Please try again.",
+        });
+      }
+
+
+      res.status(500).json({
         success: false,
         message:
-          "Invalid product ID",
+          "Failed to create sale",
       });
     }
+  };
 
-    if (
-      error.name === "ValidationError"
-    ) {
-      const messages = Object.values(
-        error.errors
-      ).map((err) => err.message);
 
-      return res.status(400).json({
-        success: false,
-        message: messages.join(", "),
-      });
-    }
-
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Duplicate sale number. Please try again.",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message:
-        "Failed to create sale",
-    });
-  }
-};
-
-module.exports = {
-  getSales,
-  getSaleById,
-  createSale,
-};
+  module.exports = {
+    getSales,
+    getSaleById,
+    createSale,
+  };

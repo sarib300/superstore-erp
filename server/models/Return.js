@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
-const saleItemSchema = new mongoose.Schema(
+const returnItemSchema = new mongoose.Schema(
   {
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      required: [true, "Product is required"],
+      required: true,
     },
 
     productName: {
@@ -22,23 +22,17 @@ const saleItemSchema = new mongoose.Schema(
 
     quantity: {
       type: Number,
-      required: [true, "Quantity is required"],
-      min: [1, "Quantity must be at least 1"],
+      required: true,
+      min: 1,
     },
 
     sellingPrice: {
       type: Number,
-      required: [true, "Selling price is required"],
-      min: [0, "Selling price cannot be negative"],
-    },
-    
-    purchasePrice: {
-      type: Number,
-      min: [0, "Purchase price cannot be negative"],
-      default: 0,
+      required: true,
+      min: 0,
     },
 
-    subtotal: {
+    refundSubtotal: {
       type: Number,
       required: true,
       min: 0,
@@ -49,24 +43,34 @@ const saleItemSchema = new mongoose.Schema(
   }
 );
 
-const saleSchema = new mongoose.Schema(
+
+const returnSchema = new mongoose.Schema(
   {
-    saleNumber: {
+    returnNumber: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
 
-    // Registered customer reference
-    // Null means walk-in customer
+    sale: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Sale",
+      required: true,
+    },
+
+    saleNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
       default: null,
     },
 
-    // Snapshot of customer name at time of sale
     customerName: {
       type: String,
       trim: true,
@@ -74,56 +78,55 @@ const saleSchema = new mongoose.Schema(
     },
 
     items: {
-      type: [saleItemSchema],
+      type: [returnItemSchema],
       validate: [
         {
           validator: function (items) {
             return items.length > 0;
           },
-          message: "At least one product is required",
+          message: "At least one returned item is required",
         },
       ],
     },
 
-    subtotalAmount: {
+    totalRefund: {
       type: Number,
       required: true,
       min: 0,
     },
 
-    discount: {
-      type: Number,
-      min: [0, "Discount cannot be negative"],
-      default: 0,
-    },
-
-    totalAmount: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-
-    paymentMethod: {
+    refundMethod: {
       type: String,
-      enum: ["cash", "card", "bank", "other"],
+      enum: [
+        "cash",
+        "card",
+        "bank",
+        "other",
+      ],
       default: "cash",
     },
 
-    saleDate: {
+    reason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
+
+    returnDate: {
       type: Date,
       default: Date.now,
     },
 
-    notes: {
-      type: String,
-      trim: true,
-      maxlength: [500, "Notes cannot exceed 500 characters"],
-      default: "",
+    processedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
 
     status: {
       type: String,
-      enum: ["completed", "cancelled"],
+      enum: ["completed"],
       default: "completed",
     },
   },
@@ -132,7 +135,8 @@ const saleSchema = new mongoose.Schema(
   }
 );
 
+
 module.exports = mongoose.model(
-  "Sale",
-  saleSchema
+  "Return",
+  returnSchema
 );

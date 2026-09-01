@@ -11,10 +11,14 @@ import {
   LayoutDashboard,
   Package,
   Truck,
+  RotateCcw,
+   BarChart3,
   ShoppingCart,
   ShoppingBag,
   LogOut,
   User,
+  WalletCards,
+  ContactRound,
   Users as UsersIcon,
 } from "lucide-react";
 
@@ -25,6 +29,10 @@ import Purchases from "./pages/Purchases";
 import Sales from "./pages/Sales";
 import Login from "./pages/Login";
 import Users from "./pages/Users";
+import Customers from "./pages/Customers";
+import Returns from "./pages/Returns";
+import Expenses from "./pages/Expenses";
+import Reports from "./pages/Reports";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -63,6 +71,25 @@ function ERPLayout() {
     user?.role === "admin" ||
     user?.role === "manager" ||
     user?.role === "cashier";
+
+    const canAccessCustomers =
+  user?.role === "admin" ||
+  user?.role === "manager" ||
+  user?.role === "cashier";
+
+  const canAccessReports =
+  user?.role === "admin" ||
+  user?.role === "manager";
+
+  const canAccessExpenses =
+  user?.role === "admin" ||
+  user?.role === "manager";
+
+  const canAccessReturns =
+  user?.role === "admin" ||
+  user?.role === "manager" ||
+  user?.role === "cashier";
+    
 
   const isAdmin =
     user?.role === "admin";
@@ -175,6 +202,62 @@ function ERPLayout() {
             </NavLink>
           )}
 
+{canAccessReturns && (
+  <NavLink
+    to="/returns"
+    className={({ isActive }) =>
+      isActive
+        ? "erp-nav-link active"
+        : "erp-nav-link"
+    }
+  >
+    <RotateCcw size={19} />
+    Returns & Refunds
+  </NavLink>
+)}
+
+{canAccessExpenses && (
+  <NavLink
+    to="/expenses"
+    className={({ isActive }) =>
+      isActive
+        ? "erp-nav-link active"
+        : "erp-nav-link"
+    }
+  >
+    <WalletCards size={19} />
+    Expenses
+  </NavLink>
+)}
+
+{canAccessReports && (
+  <NavLink
+    to="/reports"
+    className={({ isActive }) =>
+      isActive
+        ? "erp-nav-link active"
+        : "erp-nav-link"
+    }
+  >
+    <BarChart3 size={19} />
+    Reports & Analytics
+  </NavLink>
+)}
+
+{/* Customers */}
+{canAccessCustomers && (
+  <NavLink
+    to="/customers"
+    className={({ isActive }) =>
+      isActive
+        ? "erp-nav-link active"
+        : "erp-nav-link"
+    }
+  >
+    <ContactRound size={19} />
+    Customers
+  </NavLink>
+)}
 
           {/* Admin Only */}
           {isAdmin && (
@@ -319,6 +402,62 @@ function ERPLayout() {
             }
           />
 
+<Route
+  path="/returns"
+  element={
+    canAccessReturns ? (
+      <Returns />
+    ) : (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    )
+  }
+/>
+
+<Route
+  path="/expenses"
+  element={
+    canAccessExpenses ? (
+      <Expenses />
+    ) : (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    )
+  }
+/>
+
+<Route
+  path="/reports"
+  element={
+    canAccessReports ? (
+      <Reports />
+    ) : (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    )
+  }
+/>
+
+{/* Customers */}
+<Route
+  path="/customers"
+  element={
+    canAccessCustomers ? (
+      <Customers />
+    ) : (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    )
+  }
+/>
 
           {/* Users - Admin Only */}
           <Route

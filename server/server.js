@@ -5,9 +5,22 @@ require("dotenv").config();
 
 const connectDB = require("./config/db");
 
+const returnRoutes =
+  require("./routes/returnRoutes");
+
 const authRoutes = require(
     "./routes/authRoutes"
 );
+
+const reportRoutes =
+  require("./routes/reportRoutes");
+
+const customerRoutes = require(
+  "./routes/customerRoutes"
+);
+
+const expenseRoutes =
+  require("./routes/expenseRoutes");
 
 const userRoutes = require(
   "./routes/userRoutes"
@@ -47,6 +60,21 @@ app.use(
 );
 
 app.use(
+  "/api/expenses",
+  expenseRoutes
+);
+
+app.use(
+  "/api/reports",
+  reportRoutes
+);
+
+app.use(
+  "/api/returns",
+  returnRoutes
+);
+
+app.use(
   "/api/users",
   userRoutes
 );
@@ -79,6 +107,12 @@ app.use(
 app.use(
     "/api/dashboard",
     dashboardRoutes
+);
+
+// CustomerRoute
+app.use(
+  "/api/customers",
+  customerRoutes
 );
 
 

@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   LogOut,
   User,
+  Users as UsersIcon,
 } from "lucide-react";
 
 import Dashboard from "./pages/Dashboard";
@@ -23,6 +24,7 @@ import Suppliers from "./pages/Suppliers";
 import Purchases from "./pages/Purchases";
 import Sales from "./pages/Sales";
 import Login from "./pages/Login";
+import Users from "./pages/Users";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -48,6 +50,24 @@ function ERPLayout() {
     );
   }
 
+  // =========================
+  // ROLE PERMISSIONS
+  // =========================
+
+  const canAccessInventory =
+    user?.role === "admin" ||
+    user?.role === "manager" ||
+    user?.role === "inventory_staff";
+
+  const canAccessSales =
+    user?.role === "admin" ||
+    user?.role === "manager" ||
+    user?.role === "cashier";
+
+  const isAdmin =
+    user?.role === "admin";
+
+
   const handleLogout = () => {
     localStorage.removeItem("erp_token");
     localStorage.removeItem("erp_user");
@@ -59,8 +79,10 @@ function ERPLayout() {
 
   return (
     <div className="erp-layout">
+
       {/* Sidebar */}
       <aside className="erp-sidebar">
+
         <div className="erp-logo">
           <div className="erp-logo-icon">
             ERP
@@ -77,7 +99,10 @@ function ERPLayout() {
           </div>
         </div>
 
+
         <nav className="erp-nav">
+
+          {/* Dashboard - Everyone */}
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
@@ -90,58 +115,90 @@ function ERPLayout() {
             Dashboard
           </NavLink>
 
-          <NavLink
-            to="/products"
-            className={({ isActive }) =>
-              isActive
-                ? "erp-nav-link active"
-                : "erp-nav-link"
-            }
-          >
-            <Package size={19} />
-            Products
-          </NavLink>
 
-          <NavLink
-            to="/suppliers"
-            className={({ isActive }) =>
-              isActive
-                ? "erp-nav-link active"
-                : "erp-nav-link"
-            }
-          >
-            <Truck size={19} />
-            Suppliers
-          </NavLink>
+          {/* Inventory Roles */}
+          {canAccessInventory && (
+            <>
+              <NavLink
+                to="/products"
+                className={({ isActive }) =>
+                  isActive
+                    ? "erp-nav-link active"
+                    : "erp-nav-link"
+                }
+              >
+                <Package size={19} />
+                Products
+              </NavLink>
 
-          <NavLink
-            to="/purchases"
-            className={({ isActive }) =>
-              isActive
-                ? "erp-nav-link active"
-                : "erp-nav-link"
-            }
-          >
-            <ShoppingCart size={19} />
-            Purchases
-          </NavLink>
 
-          <NavLink
-            to="/sales"
-            className={({ isActive }) =>
-              isActive
-                ? "erp-nav-link active"
-                : "erp-nav-link"
-            }
-          >
-            <ShoppingBag size={19} />
-            Sales / POS
-          </NavLink>
+              <NavLink
+                to="/suppliers"
+                className={({ isActive }) =>
+                  isActive
+                    ? "erp-nav-link active"
+                    : "erp-nav-link"
+                }
+              >
+                <Truck size={19} />
+                Suppliers
+              </NavLink>
+
+
+              <NavLink
+                to="/purchases"
+                className={({ isActive }) =>
+                  isActive
+                    ? "erp-nav-link active"
+                    : "erp-nav-link"
+                }
+              >
+                <ShoppingCart size={19} />
+                Purchases
+              </NavLink>
+            </>
+          )}
+
+
+          {/* Sales Roles */}
+          {canAccessSales && (
+            <NavLink
+              to="/sales"
+              className={({ isActive }) =>
+                isActive
+                  ? "erp-nav-link active"
+                  : "erp-nav-link"
+              }
+            >
+              <ShoppingBag size={19} />
+              Sales / POS
+            </NavLink>
+          )}
+
+
+          {/* Admin Only */}
+          {isAdmin && (
+            <NavLink
+              to="/users"
+              className={({ isActive }) =>
+                isActive
+                  ? "erp-nav-link active"
+                  : "erp-nav-link"
+              }
+            >
+              <UsersIcon size={19} />
+              Users & Staff
+            </NavLink>
+          )}
+
         </nav>
+
 
         {/* User / Logout */}
         <div className="erp-sidebar-user">
+
           <div className="erp-user-info">
+
             <div className="erp-user-icon">
               <User size={17} />
             </div>
@@ -152,10 +209,14 @@ function ERPLayout() {
               </strong>
 
               <span>
-                {user?.role || "user"}
+                {user?.role === "inventory_staff"
+                  ? "Inventory Staff"
+                  : user?.role || "user"}
               </span>
             </div>
+
           </div>
+
 
           <button
             type="button"
@@ -165,12 +226,18 @@ function ERPLayout() {
             <LogOut size={17} />
             Logout
           </button>
+
         </div>
+
       </aside>
+
 
       {/* Main Content */}
       <main className="erp-main">
+
         <Routes>
+
+          {/* Root */}
           <Route
             path="/"
             element={
@@ -181,31 +248,95 @@ function ERPLayout() {
             }
           />
 
+
+          {/* Dashboard - Everyone */}
           <Route
             path="/dashboard"
             element={<Dashboard />}
           />
 
+
+          {/* Products */}
           <Route
             path="/products"
-            element={<Products />}
+            element={
+              canAccessInventory ? (
+                <Products />
+              ) : (
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              )
+            }
           />
 
+
+          {/* Suppliers */}
           <Route
             path="/suppliers"
-            element={<Suppliers />}
+            element={
+              canAccessInventory ? (
+                <Suppliers />
+              ) : (
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              )
+            }
           />
 
+
+          {/* Purchases */}
           <Route
             path="/purchases"
-            element={<Purchases />}
+            element={
+              canAccessInventory ? (
+                <Purchases />
+              ) : (
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              )
+            }
           />
 
+
+          {/* Sales / POS */}
           <Route
             path="/sales"
-            element={<Sales />}
+            element={
+              canAccessSales ? (
+                <Sales />
+              ) : (
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              )
+            }
           />
 
+
+          {/* Users - Admin Only */}
+          <Route
+            path="/users"
+            element={
+              isAdmin ? (
+                <Users />
+              ) : (
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              )
+            }
+          />
+
+
+          {/* Unknown Route */}
           <Route
             path="*"
             element={
@@ -215,8 +346,11 @@ function ERPLayout() {
               />
             }
           />
+
         </Routes>
+
       </main>
+
     </div>
   );
 }
@@ -225,12 +359,15 @@ function ERPLayout() {
 function App() {
   return (
     <BrowserRouter>
+
       <Routes>
+
         {/* Public Login */}
         <Route
           path="/login"
           element={<Login />}
         />
+
 
         {/* Protected ERP */}
         <Route
@@ -241,7 +378,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
       </Routes>
+
     </BrowserRouter>
   );
 }

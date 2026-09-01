@@ -8,9 +8,22 @@ const {
   protect,
 } = require("../middleware/authMiddleware");
 
+const {
+  authorizeRoles,
+} = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
 router.use(protect);
+
+router.use(
+  authorizeRoles(
+    "admin",
+    "manager",
+    "cashier",
+    "inventory_staff"
+  )
+);
 
 router.get("/", getDashboardSummary);
 

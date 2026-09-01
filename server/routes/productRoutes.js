@@ -13,15 +13,87 @@ const {
   protect,
 } = require("../middleware/authMiddleware");
 
+const {
+  authorizeRoles,
+} = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
+// Every product route requires login
 router.use(protect);
 
-router.get("/", getProducts);
-router.get("/:id", getProductById);
-router.post("/", createProduct);
-router.put("/:id", updateProduct);
-router.patch("/:id/stock", adjustStock);
-router.delete("/:id", deleteProduct);
+
+// ===============================
+// READ PRODUCTS
+// Cashier needs this for POS
+// ===============================
+
+router.get(
+  "/",
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff",
+    "cashier"
+  ),
+  getProducts
+);
+
+router.get(
+  "/:id",
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff",
+    "cashier"
+  ),
+  getProductById
+);
+
+
+// ===============================
+// INVENTORY MANAGEMENT
+// Cashier NOT allowed
+// ===============================
+
+router.post(
+  "/",
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff"
+  ),
+  createProduct
+);
+
+router.put(
+  "/:id",
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff"
+  ),
+  updateProduct
+);
+
+router.patch(
+  "/:id/stock",
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff"
+  ),
+  adjustStock
+);
+
+router.delete(
+  "/:id",
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff"
+  ),
+  deleteProduct
+);
 
 module.exports = router;

@@ -10,12 +10,26 @@ const {
   protect,
 } = require("../middleware/authMiddleware");
 
+const {
+  authorizeRoles,
+} = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
 router.use(protect);
 
+router.use(
+  authorizeRoles(
+    "admin",
+    "manager",
+    "inventory_staff"
+  )
+);
+
 router.get("/", getPurchases);
+
 router.get("/:id", getPurchaseById);
+
 router.post("/", createPurchase);
 
 module.exports = router;

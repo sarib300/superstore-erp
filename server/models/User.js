@@ -33,8 +33,9 @@ const userSchema = new mongoose.Schema(
         "admin",
         "manager",
         "cashier",
+        "inventory_staff",
       ],
-      default: "admin",
+      default: "cashier",
     },
 
     status: {

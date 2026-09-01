@@ -2010,3 +2010,217 @@
 .erp-logout-btn:hover {
   background: #fff1f2;
 }
+
+/* ================================
+   USERS & STAFF
+================================ */
+
+.users-page {
+  width: 100%;
+}
+
+.users-page .page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.users-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.summary-card span {
+  display: block;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.summary-card strong {
+  font-size: 26px;
+  color: #111827;
+}
+
+.table-card {
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.table-toolbar {
+  padding: 18px;
+  border-bottom: 1px solid #e7eaf0;
+}
+
+.search-box {
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d9dee8;
+  border-radius: 9px;
+  padding: 0 12px;
+  background: #ffffff;
+}
+
+.search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 11px 0;
+  font-size: 14px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.erp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.erp-table th,
+.erp-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #edf0f5;
+  white-space: nowrap;
+}
+
+.erp-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  background: #f9fafb;
+}
+
+.erp-table td {
+  font-size: 14px;
+  color: #374151;
+}
+
+.erp-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.role-badge,
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.role-badge {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.status-active {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.status-inactive {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #dfe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: #f3f4f6;
+}
+
+.status-action-btn {
+  border: none;
+  border-radius: 7px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-action-btn.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.status-action-btn.success {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.user-modal {
+  max-width: 550px;
+}
+
+.password-modal {
+  max-width: 450px;
+}
+
+.success-message {
+  margin-bottom: 16px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.error-message {
+  margin-bottom: 16px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.table-loading,
+.empty-table {
+  padding: 30px !important;
+  text-align: center !important;
+  color: #6b7280 !important;
+}
+
+@media (max-width: 1000px) {
+  .users-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .users-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

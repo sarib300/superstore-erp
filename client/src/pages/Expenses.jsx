@@ -1082,348 +1082,238 @@ function Expenses() {
           ADD / EDIT MODAL
       ========================= */}
 
-      {showModal && (
-
-        <div
-          className="modal-overlay"
-          onMouseDown={
-            closeModal
-          }
-        >
-
-          <div
-            className="modal-container expense-modal"
-            onMouseDown={
-              (event) =>
-                event.stopPropagation()
-            }
-          >
-
-            <div className="modal-header">
-
-              <div>
-
-                <h2>
-                  {editingExpense
-                    ? "Edit Expense"
-                    : "Add Expense"}
-                </h2>
-
-                <p>
-                  {editingExpense
-                    ? "Update expense information"
-                    : "Record a new business expense"}
-                </p>
-
-              </div>
-
-
-              <button
-                type="button"
-                className="modal-close"
-                onClick={
-                  closeModal
-                }
-                disabled={
-                  saving
-                }
-              >
-                <X size={20} />
-              </button>
-
-            </div>
-
-
-            <form
-              className="erp-form"
-              onSubmit={
-                handleSubmit
-              }
-            >
-
-              <div className="form-group">
-
-                <label>
-                  Expense Title
-                </label>
-
-                <input
-                  type="text"
-                  name="title"
-                  value={
-                    form.title
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="e.g. September Electricity Bill"
-                  required
-                />
-
-              </div>
-
-
-              <div className="form-row">
-
-
-                <div className="form-group">
-
-                  <label>
-                    Category
-                  </label>
-
-                  <select
-                    name="category"
-                    value={
-                      form.category
-                    }
-                    onChange={
-                      handleChange
-                    }
-                  >
-
-                    <option value="rent">
-                      Rent
-                    </option>
-
-                    <option value="electricity">
-                      Electricity
-                    </option>
-
-                    <option value="salary">
-                      Salary
-                    </option>
-
-                    <option value="transport">
-                      Transport
-                    </option>
-
-                    <option value="maintenance">
-                      Maintenance
-                    </option>
-
-                    <option value="marketing">
-                      Marketing
-                    </option>
-
-                    <option value="utilities">
-                      Utilities
-                    </option>
-
-                    <option value="supplies">
-                      Supplies
-                    </option>
-
-                    <option value="tax">
-                      Tax
-                    </option>
-
-                    <option value="other">
-                      Other
-                    </option>
-
-                  </select>
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Amount (Rs.)
-                  </label>
-
-                  <input
-                    type="number"
-                    name="amount"
-                    value={
-                      form.amount
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0"
-                    required
-                  />
-
-                </div>
-
-              </div>
-
-
-              <div className="form-row">
-
-
-                <div className="form-group">
-
-                  <label>
-                    Expense Date
-                  </label>
-
-                  <input
-                    type="date"
-                    name="expenseDate"
-                    value={
-                      form.expenseDate
-                    }
-                    onChange={
-                      handleChange
-                    }
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Payment Method
-                  </label>
-
-                  <select
-                    name="paymentMethod"
-                    value={
-                      form.paymentMethod
-                    }
-                    onChange={
-                      handleChange
-                    }
-                  >
-
-                    <option value="cash">
-                      Cash
-                    </option>
-
-                    <option value="card">
-                      Card
-                    </option>
-
-                    <option value="bank">
-                      Bank Transfer
-                    </option>
-
-                    <option value="other">
-                      Other
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
-
-
-              <div className="form-row">
-
-
-                <div className="form-group">
-
-                  <label>
-                    Vendor / Payee
-                  </label>
-
-                  <input
-                    type="text"
-                    name="vendor"
-                    value={
-                      form.vendor
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="e.g. IESCO"
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Reference
-                  </label>
-
-                  <input
-                    type="text"
-                    name="reference"
-                    value={
-                      form.reference
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Bill / invoice reference"
-                  />
-
-                </div>
-
-              </div>
-
-
-              <div className="form-group">
-
-                <label>
-                  Notes
-                </label>
-
-                <textarea
-                  name="notes"
-                  value={
-                    form.notes
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  rows="3"
-                  placeholder="Optional expense notes..."
-                />
-
-              </div>
-
-
-              <div className="modal-actions">
-
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  onClick={
-                    closeModal
-                  }
-                  disabled={
-                    saving
-                  }
-                >
-                  Cancel
-                </button>
-
-
-                <button
-                  type="submit"
-                  className="primary-btn"
-                  disabled={
-                    saving
-                  }
-                >
-
-                  {saving
-                    ? "Saving..."
-                    : editingExpense
-                    ? "Update Expense"
-                    : "Add Expense"}
-
-                </button>
-
-              </div>
-
-            </form>
-
-          </div>
-
+     {showModal && (
+  <div
+    className="modal-overlay"
+    onMouseDown={closeModal}
+  >
+    <div
+      className="modal-container expense-modal expense-form-modal"
+      onMouseDown={(event) =>
+        event.stopPropagation()
+      }
+    >
+      <div className="expense-form-header">
+        <div className="expense-form-header-icon">
+          <WalletCards size={22} />
         </div>
 
-      )}
+        <div className="expense-form-header-text">
+          <h2>
+            {editingExpense
+              ? "Edit Expense"
+              : "Add Expense"}
+          </h2>
+
+          <p>
+            {editingExpense
+              ? "Update expense details and payment information."
+              : "Record a new business operating expense."}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="modal-close expense-form-close"
+          onClick={closeModal}
+          disabled={saving}
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <form
+        className="expense-form-content"
+        onSubmit={handleSubmit}
+      >
+        <div className="expense-form-section">
+          <div className="expense-form-section-title">
+            <span>Expense Information</span>
+            <small>
+              Enter the main expense details
+            </small>
+          </div>
+
+          <div className="expense-form-grid">
+            <div className="form-group">
+              <label htmlFor="expense-title">
+                Expense Title
+              </label>
+
+              <input
+                id="expense-title"
+                type="text"
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                placeholder="e.g. September Electricity Bill"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="expense-category">
+                Category
+              </label>
+
+              <select
+                id="expense-category"
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+              >
+                <option value="rent">Rent</option>
+                <option value="electricity">Electricity</option>
+                <option value="salary">Salary</option>
+                <option value="transport">Transport</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="marketing">Marketing</option>
+                <option value="utilities">Utilities</option>
+                <option value="supplies">Supplies</option>
+                <option value="tax">Tax</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="expense-amount">
+                Amount (Rs.)
+              </label>
+
+              <input
+                id="expense-amount"
+                type="number"
+                name="amount"
+                value={form.amount}
+                onChange={handleChange}
+                min="0.01"
+                step="0.01"
+                placeholder="0"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="expense-date">
+                Expense Date
+              </label>
+
+              <input
+                id="expense-date"
+                type="date"
+                name="expenseDate"
+                value={form.expenseDate}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="expense-form-divider" />
+
+        <div className="expense-form-section">
+          <div className="expense-form-section-title">
+            <span>Payment Details</span>
+            <small>
+              Payment method, vendor and reference
+            </small>
+          </div>
+
+          <div className="expense-form-grid">
+            <div className="form-group">
+              <label htmlFor="expense-payment">
+                Payment Method
+              </label>
+
+              <select
+                id="expense-payment"
+                name="paymentMethod"
+                value={form.paymentMethod}
+                onChange={handleChange}
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank">Bank Transfer</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="expense-vendor">
+                Vendor / Payee
+              </label>
+
+              <input
+                id="expense-vendor"
+                type="text"
+                name="vendor"
+                value={form.vendor}
+                onChange={handleChange}
+                placeholder="e.g. IESCO"
+              />
+            </div>
+          </div>
+
+          <div className="form-group expense-reference-field">
+            <label htmlFor="expense-reference">
+              Reference
+            </label>
+
+            <input
+              id="expense-reference"
+              type="text"
+              name="reference"
+              value={form.reference}
+              onChange={handleChange}
+              placeholder="Bill / invoice reference"
+            />
+          </div>
+
+          <div className="form-group expense-notes-field">
+            <label htmlFor="expense-notes">
+              Notes
+            </label>
+
+            <textarea
+              id="expense-notes"
+              name="notes"
+              value={form.notes}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Optional expense notes..."
+            />
+          </div>
+        </div>
+
+        <div className="expense-form-footer">
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={closeModal}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="primary-btn expense-submit-btn"
+            disabled={saving}
+          >
+            <Plus size={17} />
+
+            {saving
+              ? "Saving..."
+              : editingExpense
+              ? "Update Expense"
+              : "Add Expense"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
     </div>
   );

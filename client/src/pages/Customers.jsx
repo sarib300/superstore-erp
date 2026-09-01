@@ -746,266 +746,218 @@ function Customers() {
           ADD / EDIT CUSTOMER MODAL
       ========================= */}
 
-      {showModal && (
-
-        <div
-          className="modal-overlay"
-          onMouseDown={
-            closeModal
-          }
-        >
-
-          <div
-            className="modal-container customer-modal"
-            onMouseDown={
-              (e) =>
-                e.stopPropagation()
-            }
-          >
-
-            <div className="modal-header">
-
-              <div>
-
-                <h2>
-                  {editingCustomer
-                    ? "Edit Customer"
-                    : "Add Customer"}
-                </h2>
-
-                <p>
-                  {editingCustomer
-                    ? "Update customer information"
-                    : "Create a new customer profile"}
-                </p>
-
-              </div>
-
-
-              <button
-                type="button"
-                className="modal-close"
-                onClick={
-                  closeModal
-                }
-              >
-                <X size={20} />
-              </button>
-
-            </div>
-
-
-            <form
-              onSubmit={
-                handleSubmit
-              }
-              className="erp-form"
-            >
-
-              <div className="form-group">
-
-                <label>
-                  Customer Name
-                </label>
-
-                <input
-                  type="text"
-                  name="name"
-                  value={
-                    form.name
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Enter customer name"
-                  required
-                />
-
-              </div>
-
-
-              <div className="form-row">
-
-
-                <div className="form-group">
-
-                  <label>
-                    Phone
-                  </label>
-
-                  <input
-                    type="text"
-                    name="phone"
-                    value={
-                      form.phone
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="03001234567"
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Email
-                  </label>
-
-                  <input
-                    type="email"
-                    name="email"
-                    value={
-                      form.email
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="customer@example.com"
-                  />
-
-                </div>
-
-              </div>
-
-
-              <div className="form-row">
-
-
-                <div className="form-group">
-
-                  <label>
-                    City
-                  </label>
-
-                  <input
-                    type="text"
-                    name="city"
-                    value={
-                      form.city
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="City"
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Status
-                  </label>
-
-                  <select
-                    name="status"
-                    value={
-                      form.status
-                    }
-                    onChange={
-                      handleChange
-                    }
-                  >
-
-                    <option value="active">
-                      Active
-                    </option>
-
-                    <option value="inactive">
-                      Inactive
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
-
-
-              <div className="form-group">
-
-                <label>
-                  Address
-                </label>
-
-                <input
-                  type="text"
-                  name="address"
-                  value={
-                    form.address
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Customer address"
-                />
-
-              </div>
-
-
-              <div className="form-group">
-
-                <label>
-                  Notes
-                </label>
-
-                <textarea
-                  name="notes"
-                  value={
-                    form.notes
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Optional notes"
-                  rows="3"
-                />
-
-              </div>
-
-
-              <div className="modal-actions">
-
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  onClick={
-                    closeModal
-                  }
-                >
-                  Cancel
-                </button>
-
-
-                <button
-                  type="submit"
-                  className="primary-btn"
-                  disabled={
-                    saving
-                  }
-                >
-
-                  {saving
-                    ? "Saving..."
-                    : editingCustomer
-                    ? "Update Customer"
-                    : "Create Customer"}
-
-                </button>
-
-              </div>
-
-            </form>
-
-          </div>
-
+     {showModal && (
+  <div
+    className="modal-overlay"
+    onMouseDown={closeModal}
+  >
+    <div
+      className="modal-container customer-modal customer-form-modal"
+      onMouseDown={(e) =>
+        e.stopPropagation()
+      }
+    >
+      <div className="customer-form-header">
+        <div className="customer-form-header-icon">
+          <UserPlus size={22} />
         </div>
 
-      )}
+        <div className="customer-form-header-text">
+          <h2>
+            {editingCustomer
+              ? "Edit Customer"
+              : "Add Customer"}
+          </h2>
+
+          <p>
+            {editingCustomer
+              ? "Update customer profile and contact information."
+              : "Create a new customer profile for sales and purchase history."}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="modal-close customer-form-close"
+          onClick={closeModal}
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="customer-form-content"
+      >
+        <div className="customer-form-section">
+          <div className="customer-form-section-title">
+            <span>Customer Information</span>
+            <small>
+              Basic profile and contact details
+            </small>
+          </div>
+
+          <div className="customer-form-grid">
+            <div className="form-group">
+              <label htmlFor="customer-name">
+                Customer Name
+              </label>
+
+              <input
+                id="customer-name"
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="e.g. Ali Raza"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="customer-phone">
+                Phone Number
+              </label>
+
+              <input
+                id="customer-phone"
+                type="text"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="03001234567"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="customer-email">
+                Email Address
+              </label>
+
+              <input
+                id="customer-email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="customer@example.com"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="customer-city">
+                City
+              </label>
+
+              <input
+                id="customer-city"
+                type="text"
+                name="city"
+                value={form.city}
+                onChange={handleChange}
+                placeholder="e.g. Islamabad"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="customer-form-divider" />
+
+        <div className="customer-form-section">
+          <div className="customer-form-section-title">
+            <span>Additional Details</span>
+            <small>
+              Address, status and optional notes
+            </small>
+          </div>
+
+          <div className="customer-form-grid customer-details-grid">
+            <div className="form-group">
+              <label htmlFor="customer-status">
+                Customer Status
+              </label>
+
+              <select
+                id="customer-status"
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+              >
+                <option value="active">
+                  Active
+                </option>
+
+                <option value="inactive">
+                  Inactive
+                </option>
+              </select>
+
+              <small className="form-helper-text">
+                Inactive customers remain in history but can be restricted from new activity.
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="customer-address">
+                Address
+              </label>
+
+              <input
+                id="customer-address"
+                type="text"
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                placeholder="Customer address"
+              />
+            </div>
+          </div>
+
+          <div className="form-group customer-notes-field">
+            <label htmlFor="customer-notes">
+              Notes
+            </label>
+
+            <textarea
+              id="customer-notes"
+              name="notes"
+              value={form.notes}
+              onChange={handleChange}
+              placeholder="Optional notes about the customer"
+              rows="3"
+            />
+          </div>
+        </div>
+
+        <div className="customer-form-footer">
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={closeModal}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="primary-btn customer-submit-btn"
+            disabled={saving}
+          >
+            <UserPlus size={17} />
+
+            {saving
+              ? "Saving..."
+              : editingCustomer
+              ? "Update Customer"
+              : "Create Customer"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
 
       {/* =========================

@@ -462,148 +462,200 @@ const Users = () => {
       </div>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-container user-modal">
-            <div className="modal-header">
-              <div>
-                <h2>
-                  {editingUser
-                    ? "Edit User"
-                    : "Add New User"}
-                </h2>
+  <div className="modal-overlay">
+    <div className="modal-container user-modal user-form-modal">
+      <div className="user-form-header">
+        <div className="user-form-header-icon">
+          <UserPlus size={22} />
+        </div>
 
-                <p>
-                  {editingUser
-                    ? "Update staff account information"
-                    : "Create a new staff account"}
-                </p>
-              </div>
+        <div className="user-form-header-text">
+          <h2>
+            {editingUser ? "Edit User" : "Add New User"}
+          </h2>
 
-              <button
-                className="modal-close"
-                onClick={closeModal}
-              >
-                <X size={20} />
-              </button>
+          <p>
+            {editingUser
+              ? "Update staff account information and permissions."
+              : "Create a staff account and assign system access."}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="modal-close user-form-close"
+          onClick={closeModal}
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="user-form-content"
+      >
+        <div className="user-form-section">
+          <div className="user-form-section-title">
+            <span>Basic Information</span>
+            <small>Staff member's account details</small>
+          </div>
+
+          <div className="user-form-grid">
+            <div className="form-group">
+              <label htmlFor="user-name">
+                Full Name
+              </label>
+
+              <input
+                id="user-name"
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                placeholder="e.g. Ahmed Khan"
+              />
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="erp-form"
-            >
-              <div className="form-group">
-                <label>Name</label>
+            <div className="form-group">
+              <label htmlFor="user-email">
+                Email Address
+              </label>
 
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter staff name"
-                />
-              </div>
+              <input
+                id="user-email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                placeholder="ahmed@superstore.com"
+              />
+            </div>
+          </div>
 
-              <div className="form-group">
-                <label>Email</label>
+          {!editingUser && (
+            <div className="form-group user-password-field">
+              <label htmlFor="user-password">
+                Temporary Password
+              </label>
 
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="staff@example.com"
-                />
-              </div>
+              <input
+                id="user-password"
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                minLength="6"
+                placeholder="Enter at least 6 characters"
+              />
 
-              {!editingUser && (
-                <div className="form-group">
-                  <label>Password</label>
+              <small className="form-helper-text">
+                The staff member will use this password to sign in.
+              </small>
+            </div>
+          )}
+        </div>
 
-                  <input
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    minLength="6"
-                    placeholder="Minimum 6 characters"
-                  />
-                </div>
-              )}
+        <div className="user-form-divider" />
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Role</label>
+        <div className="user-form-section">
+          <div className="user-form-section-title">
+            <span>Access & Permissions</span>
+            <small>Choose role and account status</small>
+          </div>
 
-                  <select
-                    name="role"
-                    value={form.role}
-                    onChange={handleChange}
-                  >
-                    <option value="admin">
-                      Admin
-                    </option>
+          <div className="user-form-grid">
+            <div className="form-group">
+              <label htmlFor="user-role">
+                Staff Role
+              </label>
 
-                    <option value="manager">
-                      Manager
-                    </option>
+              <select
+                id="user-role"
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+              >
+                <option value="admin">
+                  Administrator
+                </option>
 
-                    <option value="cashier">
-                      Cashier
-                    </option>
+                <option value="manager">
+                  Manager
+                </option>
 
-                    <option value="inventory_staff">
-                      Inventory Staff
-                    </option>
-                  </select>
-                </div>
+                <option value="cashier">
+                  Cashier
+                </option>
 
-                <div className="form-group">
-                  <label>Status</label>
+                <option value="inventory_staff">
+                  Inventory Staff
+                </option>
+              </select>
 
-                  <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                  >
-                    <option value="active">
-                      Active
-                    </option>
+              <small className="form-helper-text">
+                Determines which ERP modules the user can access.
+              </small>
+            </div>
 
-                    <option value="inactive">
-                      Inactive
-                    </option>
-                  </select>
-                </div>
-              </div>
+            <div className="form-group">
+              <label htmlFor="user-status">
+                Account Status
+              </label>
 
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  onClick={closeModal}
-                >
-                  Cancel
-                </button>
+              <select
+                id="user-status"
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+              >
+                <option value="active">
+                  Active
+                </option>
 
-                <button
-                  type="submit"
-                  className="primary-btn"
-                  disabled={saving}
-                >
-                  {saving
-                    ? "Saving..."
-                    : editingUser
-                    ? "Update User"
-                    : "Create User"}
-                </button>
-              </div>
-            </form>
+                <option value="inactive">
+                  Inactive
+                </option>
+              </select>
+
+              <small className="form-helper-text">
+                Inactive users cannot access the system.
+              </small>
+            </div>
           </div>
         </div>
-      )}
+
+        <div className="user-form-footer">
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={closeModal}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="primary-btn user-submit-btn"
+            disabled={saving}
+          >
+            <UserPlus size={17} />
+
+            {saving
+              ? "Saving..."
+              : editingUser
+              ? "Update User"
+              : "Create User"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {showPasswordModal && (
         <div className="modal-overlay">

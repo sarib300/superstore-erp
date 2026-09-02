@@ -1,9 +1,23 @@
 const Product = require("../models/Product");
+const LocationStock = require("../models/LocationStock");
+
+const {
+  ensureSystemLocations,
+  addToLocation,
+  deductFromLocations,
+  rollbackDeductions,
+  ensureProductAllocated,
+  reconcileProductLocations,
+} = require("../services/locationStockService");
+
 
 // GET /api/products
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products =
+      await Product.find().sort({
+        createdAt: -1,
+      });
 
     res.status(200).json({
       success: true,
@@ -11,24 +25,36 @@ const getProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Get products error:", error);
+    console.error(
+      "Get products error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch products",
+      message:
+        "Failed to fetch products",
     });
   }
 };
 
+
 // GET /api/products/:id
-const getProductById = async (req, res) => {
+const getProductById = async (
+  req,
+  res
+) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product =
+      await Product.findById(
+        req.params.id
+      );
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message:
+          "Product not found",
       });
     }
 
@@ -37,24 +63,33 @@ const getProductById = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Get product error:", error);
+    console.error(
+      "Get product error:",
+      error
+    );
 
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid product ID",
+        message:
+          "Invalid product ID",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch product",
+      message:
+        "Failed to fetch product",
     });
   }
 };
 
+
 // POST /api/products
-const createProduct = async (req, res) => {
+const createProduct = async (
+  req,
+  res
+) => {
   try {
     const {
       name,
@@ -73,81 +108,131 @@ const createProduct = async (req, res) => {
     if (!name || !sku) {
       return res.status(400).json({
         success: false,
-        message: "Product name and SKU are required",
+        message:
+          "Product name and SKU are required",
       });
     }
 
-    const existingProduct = await Product.findOne({
-      sku: sku.trim().toUpperCase(),
-    });
+    const existingProduct =
+      await Product.findOne({
+        sku:
+          sku.trim().toUpperCase(),
+      });
 
     if (existingProduct) {
       return res.status(409).json({
         success: false,
-        message: "A product with this SKU already exists",
+        message:
+          "A product with this SKU already exists",
       });
     }
 
     if (
       purchasePrice !== undefined &&
       sellingPrice !== undefined &&
-      Number(sellingPrice) < Number(purchasePrice)
+      Number(sellingPrice) <
+        Number(purchasePrice)
     ) {
       return res.status(400).json({
         success: false,
-        message: "Selling price cannot be lower than purchase price",
+        message:
+          "Selling price cannot be lower than purchase price",
       });
     }
 
-    const product = await Product.create({
-      name,
-      sku,
-      category,
-      purchasePrice,
-      sellingPrice,
-      quantity,
-      minimumStockLevel,
-      supplier,
-      unit,
-      description,
-      status,
-    });
+    const product =
+      await Product.create({
+        name,
+        sku,
+        category,
+        purchasePrice,
+        sellingPrice,
+        quantity,
+        minimumStockLevel,
+        supplier,
+        unit,
+        description,
+        status,
+      });
+
+    try {
+      const initialQuantity =
+        Number(
+          product.quantity || 0
+        );
+
+      if (initialQuantity > 0) {
+        const locations =
+          await ensureSystemLocations();
+
+        await addToLocation(
+          product._id,
+          locations.warehouse._id,
+          initialQuantity
+        );
+      }
+    } catch (locationError) {
+      await Product.findByIdAndDelete(
+        product._id
+      );
+
+      throw locationError;
+    }
 
     res.status(201).json({
       success: true,
-      message: "Product created successfully",
+      message:
+        "Product created successfully",
       data: product,
     });
   } catch (error) {
-    console.error("Create product error:", error);
+    console.error(
+      "Create product error:",
+      error
+    );
 
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: "A product with this SKU already exists",
+        message:
+          "A product with this SKU already exists",
       });
     }
 
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (err) => err.message
-      );
+    if (
+      error.name ===
+      "ValidationError"
+    ) {
+      const messages =
+        Object.values(
+          error.errors
+        ).map(
+          (err) =>
+            err.message
+        );
 
       return res.status(400).json({
         success: false,
-        message: messages.join(", "),
+        message:
+          messages.join(", "),
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to create product",
+      message:
+        error.message ||
+        "Failed to create product",
     });
   }
 };
 
+
 // PUT /api/products/:id
-const updateProduct = async (req, res) => {
+const updateProduct = async (
+  req,
+  res
+) => {
   try {
     const {
       name,
@@ -166,146 +251,295 @@ const updateProduct = async (req, res) => {
     if (
       purchasePrice !== undefined &&
       sellingPrice !== undefined &&
-      Number(sellingPrice) < Number(purchasePrice)
+      Number(sellingPrice) <
+        Number(purchasePrice)
     ) {
       return res.status(400).json({
         success: false,
-        message: "Selling price cannot be lower than purchase price",
+        message:
+          "Selling price cannot be lower than purchase price",
       });
     }
 
-    const product = await Product.findById(req.params.id);
+    const product =
+      await Product.findById(
+        req.params.id
+      );
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message:
+          "Product not found",
       });
     }
 
-    if (sku) {
-      const normalizedSku = sku.trim().toUpperCase();
+    await ensureProductAllocated(
+      product
+    );
 
-      const duplicateProduct = await Product.findOne({
-        sku: normalizedSku,
-        _id: { $ne: req.params.id },
-      });
+    const oldQuantity =
+      Number(
+        product.quantity || 0
+      );
+
+    if (sku) {
+      const normalizedSku =
+        sku.trim().toUpperCase();
+
+      const duplicateProduct =
+        await Product.findOne({
+          sku:
+            normalizedSku,
+          _id: {
+            $ne: req.params.id,
+          },
+        });
 
       if (duplicateProduct) {
         return res.status(409).json({
           success: false,
-          message: "A product with this SKU already exists",
+          message:
+            "A product with this SKU already exists",
         });
       }
 
-      product.sku = normalizedSku;
+      product.sku =
+        normalizedSku;
     }
 
-    if (name !== undefined) product.name = name;
-    if (category !== undefined) product.category = category;
+    if (name !== undefined) {
+      product.name = name;
+    }
+
+    if (category !== undefined) {
+      product.category =
+        category;
+    }
+
     if (purchasePrice !== undefined) {
-      product.purchasePrice = purchasePrice;
+      product.purchasePrice =
+        purchasePrice;
     }
+
     if (sellingPrice !== undefined) {
-      product.sellingPrice = sellingPrice;
+      product.sellingPrice =
+        sellingPrice;
     }
-    if (quantity !== undefined) product.quantity = quantity;
-    if (minimumStockLevel !== undefined) {
-      product.minimumStockLevel = minimumStockLevel;
+
+    if (quantity !== undefined) {
+      product.quantity =
+        quantity;
     }
-    if (supplier !== undefined) product.supplier = supplier;
-    if (unit !== undefined) product.unit = unit;
-    if (description !== undefined) product.description = description;
-    if (status !== undefined) product.status = status;
+
+    if (
+      minimumStockLevel !==
+      undefined
+    ) {
+      product.minimumStockLevel =
+        minimumStockLevel;
+    }
+
+    if (supplier !== undefined) {
+      product.supplier =
+        supplier;
+    }
+
+    if (unit !== undefined) {
+      product.unit =
+        unit;
+    }
+
+    if (description !== undefined) {
+      product.description =
+        description;
+    }
+
+    if (status !== undefined) {
+      product.status =
+        status;
+    }
 
     await product.save();
 
+    try {
+      await reconcileProductLocations(
+        product._id,
+        product.quantity
+      );
+    } catch (locationError) {
+      product.quantity =
+        oldQuantity;
+
+      await product.save();
+
+      throw locationError;
+    }
+
     res.status(200).json({
       success: true,
-      message: "Product updated successfully",
+      message:
+        "Product updated successfully",
       data: product,
     });
   } catch (error) {
-    console.error("Update product error:", error);
+    console.error(
+      "Update product error:",
+      error
+    );
 
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid product ID",
+        message:
+          "Invalid product ID",
       });
     }
 
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (err) => err.message
-      );
+    if (
+      error.name ===
+      "ValidationError"
+    ) {
+      const messages =
+        Object.values(
+          error.errors
+        ).map(
+          (err) =>
+            err.message
+        );
 
       return res.status(400).json({
         success: false,
-        message: messages.join(", "),
+        message:
+          messages.join(", "),
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to update product",
+      message:
+        error.message ||
+        "Failed to update product",
     });
   }
 };
 
-// PATCH /api/products/:id/stock
-const adjustStock = async (req, res) => {
-  try {
-    const { type, quantity } = req.body;
 
-    // Validate type
-    if (!["in", "out"].includes(type)) {
+// PATCH /api/products/:id/stock
+const adjustStock = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      type,
+      quantity,
+    } = req.body;
+
+    if (
+      !["in", "out"].includes(
+        type
+      )
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Stock type must be either 'in' or 'out'",
+        message:
+          "Stock type must be either 'in' or 'out'",
       });
     }
 
-    const adjustmentQuantity = Number(quantity);
+    const adjustmentQuantity =
+      Number(quantity);
 
-    // Validate quantity
     if (
-      !Number.isFinite(adjustmentQuantity) ||
+      !Number.isFinite(
+        adjustmentQuantity
+      ) ||
       adjustmentQuantity <= 0
     ) {
       return res.status(400).json({
         success: false,
-        message: "Quantity must be greater than 0",
+        message:
+          "Quantity must be greater than 0",
       });
     }
 
-    const product = await Product.findById(req.params.id);
+    const product =
+      await Product.findById(
+        req.params.id
+      );
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message:
+          "Product not found",
       });
     }
 
-    // STOCK IN
+    await ensureProductAllocated(
+      product
+    );
+
+    if (
+      type === "out" &&
+      adjustmentQuantity >
+        product.quantity
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          `Insufficient stock. Only ${product.quantity} ${product.unit} available.`,
+      });
+    }
+
     if (type === "in") {
-      product.quantity += adjustmentQuantity;
-    }
+      product.quantity +=
+        adjustmentQuantity;
 
-    // STOCK OUT
-    if (type === "out") {
-      if (adjustmentQuantity > product.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock. Only ${product.quantity} ${product.unit} available.`,
-        });
+      await product.save();
+
+      try {
+        const locations =
+          await ensureSystemLocations();
+
+        await addToLocation(
+          product._id,
+          locations.warehouse._id,
+          adjustmentQuantity
+        );
+      } catch (locationError) {
+        product.quantity -=
+          adjustmentQuantity;
+
+        await product.save();
+
+        throw locationError;
       }
-
-      product.quantity -= adjustmentQuantity;
     }
 
-    await product.save();
+    if (type === "out") {
+      const applied =
+        await deductFromLocations(
+          product._id,
+          adjustmentQuantity
+        );
+
+      try {
+        product.quantity -=
+          adjustmentQuantity;
+
+        await product.save();
+      } catch (productError) {
+        await rollbackDeductions([
+          {
+            applied,
+          },
+        ]);
+
+        throw productError;
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -316,67 +550,101 @@ const adjustStock = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    console.error("Adjust stock error:", error);
+    console.error(
+      "Adjust stock error:",
+      error
+    );
 
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid product ID",
+        message:
+          "Invalid product ID",
       });
     }
 
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (err) => err.message
-      );
+    if (
+      error.name ===
+      "ValidationError"
+    ) {
+      const messages =
+        Object.values(
+          error.errors
+        ).map(
+          (err) =>
+            err.message
+        );
 
       return res.status(400).json({
         success: false,
-        message: messages.join(", "),
+        message:
+          messages.join(", "),
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to adjust stock",
+      message:
+        error.message ||
+        "Failed to adjust stock",
     });
   }
 };
 
+
 // DELETE /api/products/:id
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (
+  req,
+  res
+) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product =
+      await Product.findById(
+        req.params.id
+      );
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message:
+          "Product not found",
       });
     }
+
+    await LocationStock.deleteMany({
+      product:
+        product._id,
+    });
 
     await product.deleteOne();
 
     res.status(200).json({
       success: true,
-      message: "Product deleted successfully",
+      message:
+        "Product deleted successfully",
     });
   } catch (error) {
-    console.error("Delete product error:", error);
+    console.error(
+      "Delete product error:",
+      error
+    );
 
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid product ID",
+        message:
+          "Invalid product ID",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to delete product",
+      message:
+        "Failed to delete product",
     });
   }
 };
+
 
 module.exports = {
   getProducts,

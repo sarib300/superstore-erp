@@ -2,6 +2,12 @@ const Sale = require("../models/Sale");
 const Product = require("../models/Product");
 const Customer = require("../models/Customer");
 
+const {
+  ensureProductAllocated,
+  deductItemsFromLocations,
+  rollbackDeductions,
+} = require("../services/locationStockService");
+
 const generateSaleNumber = () => {
   return `SAL-${Date.now()}`;
 };
@@ -233,6 +239,13 @@ const createSale = async (req, res) => {
       }
 
 
+      // Keep location allocation synchronized
+      // with consolidated product quantity.
+      await ensureProductAllocated(
+        product
+      );
+
+
       if (
         quantity >
         product.quantity
@@ -416,6 +429,47 @@ const createSale = async (req, res) => {
             message:
               "Stock changed before sale could be completed. Please try again.",
           });
+        }
+
+
+        // Deduct the same sold quantity from
+        // physical stock locations.
+        try {
+          await deductItemsFromLocations(
+            saleItems
+          );
+        } catch (locationError) {
+
+          // Product quantity was already reduced,
+          // so restore it before failing the sale.
+          const restoreOperations =
+            saleItems.map(
+              (item) => ({
+                updateOne: {
+                  filter: {
+                    _id:
+                      item.product,
+                  },
+
+                  update: {
+                    $inc: {
+                      quantity:
+                        item.quantity,
+                    },
+                  },
+                },
+              })
+            );
+
+          await Product.bulkWrite(
+            restoreOperations
+          );
+
+          await Sale.findByIdAndDelete(
+            sale._id
+          );
+
+          throw locationError;
         }
 
       } catch (stockError) {

@@ -2,6 +2,12 @@ const Return = require("../models/Return");
 const Sale = require("../models/Sale");
 const Product = require("../models/Product");
 
+const {
+  ensureSystemLocations,
+  addItemsToLocation,
+  rollbackLocationAdds,
+} = require("../services/locationStockService");
+
 
 const generateReturnNumber = () => {
   return `RET-${Date.now()}`;
@@ -619,6 +625,72 @@ const createReturn =
             message:
               "Unable to restore all returned stock. Please try again.",
           });
+        }
+
+
+        // Returned goods are received back
+        // into the Main Store location.
+        let storeId = null;
+        let locationAdds = [];
+
+        try {
+          const locations =
+            await ensureSystemLocations();
+
+          storeId =
+            locations.store._id;
+
+          locationAdds =
+            await addItemsToLocation(
+              returnItems,
+              storeId
+            );
+        } catch (locationError) {
+
+          // Consolidated stock was already restored.
+          // Reverse it if location stock fails.
+          const reverseOperations =
+            returnItems.map(
+              (item) => ({
+                updateOne: {
+                  filter: {
+                    _id:
+                      item.product,
+                    quantity: {
+                      $gte:
+                        item.quantity,
+                    },
+                  },
+
+                  update: {
+                    $inc: {
+                      quantity:
+                        -item.quantity,
+                    },
+                  },
+                },
+              })
+            );
+
+          await Product.bulkWrite(
+            reverseOperations
+          );
+
+          if (
+            storeId &&
+            locationAdds.length > 0
+          ) {
+            await rollbackLocationAdds(
+              locationAdds,
+              storeId
+            );
+          }
+
+          await Return.findByIdAndDelete(
+            returnRecord._id
+          );
+
+          throw locationError;
         }
 
       } catch (stockError) {

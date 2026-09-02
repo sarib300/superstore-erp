@@ -2,6 +2,12 @@ const Purchase = require("../models/Purchase");
 const Product = require("../models/Product");
 const Supplier = require("../models/Supplier");
 
+const {
+  ensureSystemLocations,
+  addItemsToLocation,
+  rollbackLocationAdds,
+} = require("../services/locationStockService");
+
 
 // Generate a simple purchase number
 const generatePurchaseNumber = () => {
@@ -15,7 +21,10 @@ const generatePurchaseNumber = () => {
 const getPurchases = async (req, res) => {
   try {
     const purchases = await Purchase.find()
-      .populate("supplier", "name company phone")
+      .populate(
+        "supplier",
+        "name company phone"
+      )
       .populate(
         "items.product",
         "name sku unit"
@@ -37,31 +46,37 @@ const getPurchases = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch purchases",
+      message:
+        "Failed to fetch purchases",
     });
   }
 };
 
 
 // GET /api/purchases/:id
-const getPurchaseById = async (req, res) => {
+const getPurchaseById = async (
+  req,
+  res
+) => {
   try {
-    const purchase = await Purchase.findById(
-      req.params.id
-    )
-      .populate(
-        "supplier",
-        "name company phone email address"
+    const purchase =
+      await Purchase.findById(
+        req.params.id
       )
-      .populate(
-        "items.product",
-        "name sku unit category"
-      );
+        .populate(
+          "supplier",
+          "name company phone email address"
+        )
+        .populate(
+          "items.product",
+          "name sku unit category"
+        );
 
     if (!purchase) {
       return res.status(404).json({
         success: false,
-        message: "Purchase not found",
+        message:
+          "Purchase not found",
       });
     }
 
@@ -78,20 +93,25 @@ const getPurchaseById = async (req, res) => {
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid purchase ID",
+        message:
+          "Invalid purchase ID",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch purchase",
+      message:
+        "Failed to fetch purchase",
     });
   }
 };
 
 
 // POST /api/purchases
-const createPurchase = async (req, res) => {
+const createPurchase = async (
+  req,
+  res
+) => {
   try {
     const {
       supplier,
@@ -101,25 +121,31 @@ const createPurchase = async (req, res) => {
       notes,
     } = req.body;
 
-    // Supplier validation
     if (!supplier) {
       return res.status(400).json({
         success: false,
-        message: "Supplier is required",
+        message:
+          "Supplier is required",
       });
     }
 
     const supplierRecord =
-      await Supplier.findById(supplier);
+      await Supplier.findById(
+        supplier
+      );
 
     if (!supplierRecord) {
       return res.status(404).json({
         success: false,
-        message: "Supplier not found",
+        message:
+          "Supplier not found",
       });
     }
 
-    if (supplierRecord.status !== "active") {
+    if (
+      supplierRecord.status !==
+      "active"
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -127,7 +153,6 @@ const createPurchase = async (req, res) => {
       });
     }
 
-    // Items validation
     if (
       !Array.isArray(items) ||
       items.length === 0
@@ -140,11 +165,10 @@ const createPurchase = async (req, res) => {
     }
 
     const purchaseItems = [];
-
     let totalAmount = 0;
 
-    // Prevent duplicate products
-    const usedProducts = new Set();
+    const usedProducts =
+      new Set();
 
     for (const item of items) {
       if (!item.product) {
@@ -155,7 +179,11 @@ const createPurchase = async (req, res) => {
         });
       }
 
-      if (usedProducts.has(item.product)) {
+      if (
+        usedProducts.has(
+          item.product
+        )
+      ) {
         return res.status(400).json({
           success: false,
           message:
@@ -163,16 +191,22 @@ const createPurchase = async (req, res) => {
         });
       }
 
-      usedProducts.add(item.product);
-
-      const quantity = Number(item.quantity);
-
-      const purchasePrice = Number(
-        item.purchasePrice
+      usedProducts.add(
+        item.product
       );
 
+      const quantity =
+        Number(item.quantity);
+
+      const purchasePrice =
+        Number(
+          item.purchasePrice
+        );
+
       if (
-        !Number.isInteger(quantity) ||
+        !Number.isInteger(
+          quantity
+        ) ||
         quantity <= 0
       ) {
         return res.status(400).json({
@@ -183,7 +217,9 @@ const createPurchase = async (req, res) => {
       }
 
       if (
-        !Number.isFinite(purchasePrice) ||
+        !Number.isFinite(
+          purchasePrice
+        ) ||
         purchasePrice < 0
       ) {
         return res.status(400).json({
@@ -206,29 +242,37 @@ const createPurchase = async (req, res) => {
         });
       }
 
-      if (product.status !== "active") {
+      if (
+        product.status !==
+        "active"
+      ) {
         return res.status(400).json({
           success: false,
-          message: `${product.name} is inactive`,
+          message:
+            `${product.name} is inactive`,
         });
       }
 
       const subtotal =
-        quantity * purchasePrice;
+        quantity *
+        purchasePrice;
 
-      totalAmount += subtotal;
+      totalAmount +=
+        subtotal;
 
       purchaseItems.push({
-        product: product._id,
-        productName: product.name,
-        sku: product.sku,
+        product:
+          product._id,
+        productName:
+          product.name,
+        sku:
+          product.sku,
         quantity,
         purchasePrice,
         subtotal,
       });
     }
 
-    // Create purchase first
     const purchase =
       await Purchase.create({
         purchaseNumber:
@@ -241,48 +285,120 @@ const createPurchase = async (req, res) => {
           supplierRecord.name,
 
         invoiceNumber:
-          invoiceNumber?.trim() || "",
+          invoiceNumber?.trim() ||
+          "",
 
-        items: purchaseItems,
+        items:
+          purchaseItems,
 
         totalAmount,
 
         purchaseDate:
-          purchaseDate || new Date(),
+          purchaseDate ||
+          new Date(),
 
         notes:
-          notes?.trim() || "",
+          notes?.trim() ||
+          "",
 
-        status: "received",
+        status:
+          "received",
       });
 
-    try {
-      // Increase product quantities
-      const stockOperations =
-        purchaseItems.map((item) => ({
-          updateOne: {
-            filter: {
-              _id: item.product,
-            },
+    let warehouseId = null;
+    let locationAdds = [];
 
-            update: {
-              $inc: {
-                quantity:
-                  item.quantity,
+    try {
+      const stockOperations =
+        purchaseItems.map(
+          (item) => ({
+            updateOne: {
+              filter: {
+                _id:
+                  item.product,
+              },
+
+              update: {
+                $inc: {
+                  quantity:
+                    item.quantity,
+                },
               },
             },
-          },
-        }));
+          })
+        );
 
       await Product.bulkWrite(
         stockOperations
       );
+
+      const locations =
+        await ensureSystemLocations();
+
+      warehouseId =
+        locations.warehouse._id;
+
+      locationAdds =
+        await addItemsToLocation(
+          purchaseItems,
+          warehouseId
+        );
     } catch (stockError) {
-      /*
-        If stock update fails, remove
-        the purchase so we do not leave
-        a successful purchase without stock.
-      */
+      const rollbackOperations =
+        purchaseItems.map(
+          (item) => ({
+            updateOne: {
+              filter: {
+                _id:
+                  item.product,
+                quantity: {
+                  $gte:
+                    item.quantity,
+                },
+              },
+
+              update: {
+                $inc: {
+                  quantity:
+                    -item.quantity,
+                },
+              },
+            },
+          })
+        );
+
+      try {
+        await Product.bulkWrite(
+          rollbackOperations
+        );
+      } catch (
+        rollbackProductError
+      ) {
+        console.error(
+          "Purchase product rollback error:",
+          rollbackProductError
+        );
+      }
+
+      if (
+        warehouseId &&
+        locationAdds.length > 0
+      ) {
+        try {
+          await rollbackLocationAdds(
+            locationAdds,
+            warehouseId
+          );
+        } catch (
+          rollbackLocationError
+        ) {
+          console.error(
+            "Purchase location rollback error:",
+            rollbackLocationError
+          );
+        }
+      }
+
       await Purchase.findByIdAndDelete(
         purchase._id
       );
@@ -306,8 +422,9 @@ const createPurchase = async (req, res) => {
     res.status(201).json({
       success: true,
       message:
-        "Purchase created and stock updated successfully",
-      data: populatedPurchase,
+        "Purchase created and stock received into Main Warehouse successfully",
+      data:
+        populatedPurchase,
     });
   } catch (error) {
     console.error(
@@ -327,13 +444,18 @@ const createPurchase = async (req, res) => {
       error.name ===
       "ValidationError"
     ) {
-      const messages = Object.values(
-        error.errors
-      ).map((err) => err.message);
+      const messages =
+        Object.values(
+          error.errors
+        ).map(
+          (err) =>
+            err.message
+        );
 
       return res.status(400).json({
         success: false,
-        message: messages.join(", "),
+        message:
+          messages.join(", "),
       });
     }
 
@@ -348,6 +470,7 @@ const createPurchase = async (req, res) => {
     res.status(500).json({
       success: false,
       message:
+        error.message ||
         "Failed to create purchase",
     });
   }

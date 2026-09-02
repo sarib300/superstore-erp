@@ -11,6 +11,9 @@ import {
   Banknote,
   ReceiptText,
   UserRound,
+  Printer,
+MessageCircle,
+Eye,
 } from "lucide-react";
 
 import {
@@ -44,6 +47,15 @@ function Sales() {
     useState(false);
 
   const [formError, setFormError] =
+    useState("");
+
+  const [showReceiptModal, setShowReceiptModal] =
+    useState(false);
+
+  const [receiptSale, setReceiptSale] =
+    useState(null);
+
+  const [whatsappNumber, setWhatsappNumber] =
     useState("");
 
 
@@ -546,6 +558,22 @@ function Sales() {
         );
 
 
+        // Open receipt automatically after successful sale
+        const customerPhone =
+          selectedCustomer?.phone || "";
+
+        setReceiptSale({
+          ...result.data,
+          customerPhone,
+        });
+
+        setWhatsappNumber(
+          customerPhone
+        );
+
+        setShowReceiptModal(true);
+
+
         // Stock reduced on backend
         await fetchProducts();
 
@@ -654,6 +682,122 @@ function Sales() {
         formData.customer
     );
 
+    // =========================
+// RECEIPT / INVOICE
+// =========================
+
+const openReceipt = (sale) => {
+  const phone =
+    sale.customer?.phone ||
+    sale.customerPhone ||
+    "";
+
+  setReceiptSale({
+    ...sale,
+    customerPhone: phone,
+  });
+
+  setWhatsappNumber(phone);
+
+  setShowReceiptModal(true);
+};
+
+
+const closeReceipt = () => {
+  setShowReceiptModal(false);
+  setReceiptSale(null);
+  setWhatsappNumber("");
+};
+
+
+const handlePrintReceipt = () => {
+  window.print();
+};
+
+
+const normalizeWhatsAppNumber = (value) => {
+  let number = String(value || "")
+    .replace(/\D/g, "");
+
+  if (number.startsWith("0")) {
+    number =
+      "92" + number.slice(1);
+  }
+
+  return number;
+};
+
+
+const handleWhatsAppReceipt = () => {
+  if (!receiptSale) return;
+
+  const number =
+    normalizeWhatsAppNumber(
+      whatsappNumber
+    );
+
+  if (!number) {
+    alert(
+      "Please enter a WhatsApp number."
+    );
+
+    return;
+  }
+
+  const itemLines =
+    receiptSale.items
+      ?.map(
+        (item) =>
+          `${item.productName} x${item.quantity} - Rs. ${Number(
+            item.subtotal ||
+              item.sellingPrice *
+                item.quantity ||
+              0
+          ).toLocaleString()}`
+      )
+      .join("\n") || "";
+
+
+  const message = `*SuperStore*
+Purchase Receipt
+
+Invoice: ${receiptSale.saleNumber}
+Customer: ${
+    receiptSale.customerName ||
+    "Walk-in Customer"
+  }
+Date: ${new Date(
+    receiptSale.saleDate
+  ).toLocaleDateString()}
+
+${itemLines}
+
+Subtotal: Rs. ${Number(
+    receiptSale.subtotalAmount || 0
+  ).toLocaleString()}
+Discount: Rs. ${Number(
+    receiptSale.discount || 0
+  ).toLocaleString()}
+*Total: Rs. ${Number(
+    receiptSale.totalAmount || 0
+  ).toLocaleString()}*
+
+Payment: ${
+    receiptSale.paymentMethod || "-"
+  }
+
+Thank you for shopping with us.`;
+
+  const url =
+    `https://wa.me/${number}?text=` +
+    encodeURIComponent(message);
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+};
 
   return (
     <div className="sales-page">
@@ -850,6 +994,10 @@ function Sales() {
                   <th>
                     Status
                   </th>
+
+                  <th>
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
@@ -997,6 +1145,19 @@ function Sales() {
 
                       </td>
 
+                      <td>
+                        <button
+                          type="button"
+                          className="icon-btn receipt-view-btn"
+                          title="View Receipt"
+                          onClick={() =>
+                            openReceipt(sale)
+                          }
+                        >
+                          <ReceiptText size={17} />
+                        </button>
+                      </td>
+
                     </tr>
                   )
                 )}
@@ -1008,6 +1169,241 @@ function Sales() {
           </div>
         )}
 
+
+      {/* =========================
+          SALE RECEIPT / INVOICE
+      ========================= */}
+
+      {showReceiptModal &&
+        receiptSale && (
+
+        <div
+          className="modal-overlay receipt-overlay"
+          onMouseDown={closeReceipt}
+        >
+          <div
+            className="receipt-modal"
+            onMouseDown={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <div className="receipt-modal-header">
+              <div>
+                <h2>
+                  <ReceiptText size={21} />
+                  Sale Receipt
+                </h2>
+                <p>
+                  Print or share the customer receipt
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeReceipt}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div
+              id="sale-receipt-print"
+              className="receipt-paper"
+            >
+              <div className="receipt-store-header">
+                <div className="receipt-logo">
+                  ERP
+                </div>
+                <div>
+                  <h2>SuperStore</h2>
+                  <p>Sales Receipt</p>
+                </div>
+              </div>
+
+              <div className="receipt-divider" />
+
+              <div className="receipt-meta">
+                <div>
+                  <span>Invoice</span>
+                  <strong>{receiptSale.saleNumber}</strong>
+                </div>
+
+                <div>
+                  <span>Date</span>
+                  <strong>
+                    {new Date(
+                      receiptSale.saleDate
+                    ).toLocaleDateString()}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Customer</span>
+                  <strong>
+                    {receiptSale.customerName ||
+                      "Walk-in Customer"}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Payment</span>
+                  <strong className="receipt-capitalize">
+                    {receiptSale.paymentMethod || "-"}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="receipt-divider" />
+
+              <div className="receipt-items">
+                <div className="receipt-item-header">
+                  <span>Item</span>
+                  <span>Qty</span>
+                  <span>Price</span>
+                  <span>Total</span>
+                </div>
+
+                {receiptSale.items?.map(
+                  (item, index) => (
+                    <div
+                      className="receipt-item-row"
+                      key={
+                        item._id ||
+                        `${item.sku}-${index}`
+                      }
+                    >
+                      <div>
+                        <strong>{item.productName}</strong>
+                        {item.sku && (
+                          <small>{item.sku}</small>
+                        )}
+                      </div>
+
+                      <span>{item.quantity}</span>
+
+                      <span>
+                        Rs.{" "}
+                        {Number(
+                          item.sellingPrice || 0
+                        ).toLocaleString()}
+                      </span>
+
+                      <span>
+                        Rs.{" "}
+                        {Number(
+                          item.subtotal ||
+                            item.sellingPrice *
+                              item.quantity ||
+                            0
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+
+              <div className="receipt-divider" />
+
+              <div className="receipt-totals">
+                <div>
+                  <span>Subtotal</span>
+                  <strong>
+                    Rs.{" "}
+                    {Number(
+                      receiptSale.subtotalAmount || 0
+                    ).toLocaleString()}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Discount</span>
+                  <strong>
+                    - Rs.{" "}
+                    {Number(
+                      receiptSale.discount || 0
+                    ).toLocaleString()}
+                  </strong>
+                </div>
+
+                <div className="receipt-total-final">
+                  <span>Total</span>
+                  <strong>
+                    Rs.{" "}
+                    {Number(
+                      receiptSale.totalAmount || 0
+                    ).toLocaleString()}
+                  </strong>
+                </div>
+              </div>
+
+              {receiptSale.notes && (
+                <div className="receipt-notes">
+                  <strong>Notes</strong>
+                  <p>{receiptSale.notes}</p>
+                </div>
+              )}
+
+              <div className="receipt-thanks">
+                <strong>
+                  Thank you for shopping with us!
+                </strong>
+                <p>We appreciate your business.</p>
+              </div>
+            </div>
+
+            <div className="receipt-share-section">
+              <label>WhatsApp Number</label>
+
+              <div className="receipt-whatsapp-row">
+                <input
+                  type="text"
+                  value={whatsappNumber}
+                  onChange={(event) =>
+                    setWhatsappNumber(
+                      event.target.value
+                    )
+                  }
+                  placeholder="e.g. 03001234567"
+                />
+
+                <button
+                  type="button"
+                  className="receipt-whatsapp-btn"
+                  onClick={handleWhatsAppReceipt}
+                >
+                  <MessageCircle size={17} />
+                  Send WhatsApp
+                </button>
+              </div>
+
+              <small>
+                For registered customers, the saved phone
+                number is filled automatically.
+              </small>
+            </div>
+
+            <div className="receipt-actions">
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={closeReceipt}
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                className="primary-btn receipt-print-btn"
+                onClick={handlePrintReceipt}
+              >
+                <Printer size={17} />
+                Print Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* =========================
           POS MODAL

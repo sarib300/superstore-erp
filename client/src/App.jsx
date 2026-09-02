@@ -20,6 +20,7 @@ import {
   WalletCards,
   ContactRound,
   Users as UsersIcon,
+  Warehouse,
 } from "lucide-react";
 
 import Dashboard from "./pages/Dashboard";
@@ -33,6 +34,7 @@ import Customers from "./pages/Customers";
 import Returns from "./pages/Returns";
 import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
+import StockLocations from "./pages/StockLocations";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -156,6 +158,19 @@ function ERPLayout() {
               >
                 <Package size={19} />
                 Products
+              </NavLink>
+
+
+              <NavLink
+                to="/stock-locations"
+                className={({ isActive }) =>
+                  isActive
+                    ? "erp-nav-link active"
+                    : "erp-nav-link"
+                }
+              >
+                <Warehouse size={19} />
+                Stock Locations
               </NavLink>
 
 
@@ -345,6 +360,22 @@ function ERPLayout() {
             element={
               canAccessInventory ? (
                 <Products />
+              ) : (
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              )
+            }
+          />
+
+
+          {/* Stock Locations */}
+          <Route
+            path="/stock-locations"
+            element={
+              canAccessInventory ? (
+                <StockLocations />
               ) : (
                 <Navigate
                   to="/dashboard"

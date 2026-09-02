@@ -34,8 +34,7 @@ const Users = () => {
   const [error, setError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] =
-    useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [editingUser, setEditingUser] = useState(null);
 
@@ -53,10 +52,7 @@ const Users = () => {
 
       setUsers(result.data || []);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to load users"
-      );
+      setError(err.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -137,10 +133,7 @@ const Users = () => {
       closeModal();
       await loadUsers();
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Something went wrong"
-      );
+      setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -160,10 +153,7 @@ const Users = () => {
       setSaving(true);
       setError("");
 
-      await resetUserPassword(
-        passwordUser._id,
-        newPassword
-      );
+      await resetUserPassword(passwordUser._id, newPassword);
 
       setShowPasswordModal(false);
       setPasswordUser(null);
@@ -171,27 +161,19 @@ const Users = () => {
 
       showSuccess("Password reset successfully");
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to reset password"
-      );
+      setError(err.response?.data?.message || "Failed to reset password");
     } finally {
       setSaving(false);
     }
   };
 
   const toggleStatus = async (user) => {
-    const newStatus =
-      user.status === "active"
-        ? "inactive"
-        : "active";
+    const newStatus = user.status === "active" ? "inactive" : "active";
 
     const confirmed = window.confirm(
       `Are you sure you want to ${
-        newStatus === "active"
-          ? "activate"
-          : "deactivate"
-      } ${user.name}?`
+        newStatus === "active" ? "activate" : "deactivate"
+      } ${user.name}?`,
     );
 
     if (!confirmed) return;
@@ -208,18 +190,13 @@ const Users = () => {
 
       showSuccess(
         `User ${
-          newStatus === "active"
-            ? "activated"
-            : "deactivated"
-        } successfully`
+          newStatus === "active" ? "activated" : "deactivated"
+        } successfully`,
       );
 
       await loadUsers();
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to update user status"
-      );
+      setError(err.response?.data?.message || "Failed to update user status");
     }
   };
 
@@ -238,10 +215,7 @@ const Users = () => {
       return "Inventory Staff";
     }
 
-    return (
-      role.charAt(0).toUpperCase() +
-      role.slice(1)
-    );
+    return role.charAt(0).toUpperCase() + role.slice(1);
   };
 
   return (
@@ -253,31 +227,18 @@ const Users = () => {
             Users & Staff
           </h1>
 
-          <p>
-            Manage staff accounts, roles and access
-          </p>
+          <p>Manage staff accounts, roles and access</p>
         </div>
 
-        <button
-          className="primary-btn"
-          onClick={openAddModal}
-        >
+        <button className="primary-btn" onClick={openAddModal}>
           <UserPlus size={18} />
           Add User
         </button>
       </div>
 
-      {message && (
-        <div className="success-message">
-          {message}
-        </div>
-      )}
+      {message && <div className="success-message">{message}</div>}
 
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       <div className="users-summary-grid">
         <div className="summary-card">
@@ -288,36 +249,21 @@ const Users = () => {
         <div className="summary-card">
           <span>Active Users</span>
           <strong>
-            {
-              users.filter(
-                (user) =>
-                  user.status === "active"
-              ).length
-            }
+            {users.filter((user) => user.status === "active").length}
           </strong>
         </div>
 
         <div className="summary-card">
           <span>Inactive Users</span>
           <strong>
-            {
-              users.filter(
-                (user) =>
-                  user.status === "inactive"
-              ).length
-            }
+            {users.filter((user) => user.status === "inactive").length}
           </strong>
         </div>
 
         <div className="summary-card">
           <span>Administrators</span>
           <strong>
-            {
-              users.filter(
-                (user) =>
-                  user.role === "admin"
-              ).length
-            }
+            {users.filter((user) => user.role === "admin").length}
           </strong>
         </div>
       </div>
@@ -331,17 +277,13 @@ const Users = () => {
               type="text"
               placeholder="Search by name, email or role..."
               value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="table-loading">
-            Loading users...
-          </div>
+          <div className="table-loading">Loading users...</div>
         ) : (
           <div className="table-responsive">
             <table className="erp-table">
@@ -359,10 +301,7 @@ const Users = () => {
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="empty-table"
-                    >
+                    <td colSpan="6" className="empty-table">
                       No users found.
                     </td>
                   </tr>
@@ -370,9 +309,7 @@ const Users = () => {
                   filteredUsers.map((user) => (
                     <tr key={user._id}>
                       <td>
-                        <strong>
-                          {user.name}
-                        </strong>
+                        <strong>{user.name}</strong>
                       </td>
 
                       <td>{user.email}</td>
@@ -386,8 +323,7 @@ const Users = () => {
                       <td>
                         <span
                           className={`status-badge ${
-                            user.status ===
-                            "active"
+                            user.status === "active"
                               ? "status-active"
                               : "status-inactive"
                           }`}
@@ -398,9 +334,7 @@ const Users = () => {
 
                       <td>
                         {user.createdAt
-                          ? new Date(
-                              user.createdAt
-                            ).toLocaleDateString()
+                          ? new Date(user.createdAt).toLocaleDateString()
                           : "-"}
                       </td>
 
@@ -409,11 +343,7 @@ const Users = () => {
                           <button
                             className="icon-btn"
                             title="Edit User"
-                            onClick={() =>
-                              openEditModal(
-                                user
-                              )
-                            }
+                            onClick={() => openEditModal(user)}
                           >
                             <Pencil size={16} />
                           </button>
@@ -421,32 +351,20 @@ const Users = () => {
                           <button
                             className="icon-btn"
                             title="Reset Password"
-                            onClick={() =>
-                              openPasswordModal(
-                                user
-                              )
-                            }
+                            onClick={() => openPasswordModal(user)}
                           >
-                            <KeyRound
-                              size={16}
-                            />
+                            <KeyRound size={16} />
                           </button>
 
                           <button
                             className={
-                              user.status ===
-                              "active"
+                              user.status === "active"
                                 ? "status-action-btn danger"
                                 : "status-action-btn success"
                             }
-                            onClick={() =>
-                              toggleStatus(
-                                user
-                              )
-                            }
+                            onClick={() => toggleStatus(user)}
                           >
-                            {user.status ===
-                            "active"
+                            {user.status === "active"
                               ? "Deactivate"
                               : "Activate"}
                           </button>
@@ -462,200 +380,173 @@ const Users = () => {
       </div>
 
       {showModal && (
-  <div className="modal-overlay">
-    <div className="modal-container user-modal user-form-modal">
-      <div className="user-form-header">
-        <div className="user-form-header-icon">
-          <UserPlus size={22} />
-        </div>
+        <div className="modal-overlay">
+          <div className="modal-container user-modal user-form-modal">
+            <div className="user-form-header">
+              <div className="user-form-header-icon">
+                <UserPlus size={22} />
+              </div>
 
-        <div className="user-form-header-text">
-          <h2>
-            {editingUser ? "Edit User" : "Add New User"}
-          </h2>
+              <div className="user-form-header-text">
+                <h2>{editingUser ? "Edit User" : "Add New User"}</h2>
 
-          <p>
-            {editingUser
-              ? "Update staff account information and permissions."
-              : "Create a staff account and assign system access."}
-          </p>
-        </div>
+                <p>
+                  {editingUser
+                    ? "Update staff account information and permissions."
+                    : "Create a staff account and assign system access."}
+                </p>
+              </div>
 
-        <button
-          type="button"
-          className="modal-close user-form-close"
-          onClick={closeModal}
-          aria-label="Close"
-        >
-          <X size={20} />
-        </button>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="user-form-content"
-      >
-        <div className="user-form-section">
-          <div className="user-form-section-title">
-            <span>Basic Information</span>
-            <small>Staff member's account details</small>
-          </div>
-
-          <div className="user-form-grid">
-            <div className="form-group">
-              <label htmlFor="user-name">
-                Full Name
-              </label>
-
-              <input
-                id="user-name"
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                required
-                placeholder="e.g. Ahmed Khan"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="user-email">
-                Email Address
-              </label>
-
-              <input
-                id="user-email"
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                placeholder="ahmed@superstore.com"
-              />
-            </div>
-          </div>
-
-          {!editingUser && (
-            <div className="form-group user-password-field">
-              <label htmlFor="user-password">
-                Temporary Password
-              </label>
-
-              <input
-                id="user-password"
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                required
-                minLength="6"
-                placeholder="Enter at least 6 characters"
-              />
-
-              <small className="form-helper-text">
-                The staff member will use this password to sign in.
-              </small>
-            </div>
-          )}
-        </div>
-
-        <div className="user-form-divider" />
-
-        <div className="user-form-section">
-          <div className="user-form-section-title">
-            <span>Access & Permissions</span>
-            <small>Choose role and account status</small>
-          </div>
-
-          <div className="user-form-grid">
-            <div className="form-group">
-              <label htmlFor="user-role">
-                Staff Role
-              </label>
-
-              <select
-                id="user-role"
-                name="role"
-                value={form.role}
-                onChange={handleChange}
+              <button
+                type="button"
+                className="modal-close user-form-close"
+                onClick={closeModal}
+                aria-label="Close"
               >
-                <option value="admin">
-                  Administrator
-                </option>
-
-                <option value="manager">
-                  Manager
-                </option>
-
-                <option value="cashier">
-                  Cashier
-                </option>
-
-                <option value="inventory_staff">
-                  Inventory Staff
-                </option>
-              </select>
-
-              <small className="form-helper-text">
-                Determines which ERP modules the user can access.
-              </small>
+                <X size={20} />
+              </button>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="user-status">
-                Account Status
-              </label>
+            <form onSubmit={handleSubmit} className="user-form-content">
+              <div className="user-form-section">
+                <div className="user-form-section-title">
+                  <span>Basic Information</span>
+                  <small>Staff member's account details</small>
+                </div>
 
-              <select
-                id="user-status"
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-              >
-                <option value="active">
-                  Active
-                </option>
+                <div className="user-form-grid">
+                  <div className="form-group">
+                    <label htmlFor="user-name">Full Name</label>
 
-                <option value="inactive">
-                  Inactive
-                </option>
-              </select>
+                    <input
+                      id="user-name"
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. Ahmed Khan"
+                    />
+                  </div>
 
-              <small className="form-helper-text">
-                Inactive users cannot access the system.
-              </small>
-            </div>
+                  <div className="form-group">
+                    <label htmlFor="user-email">Email Address</label>
+
+                    <input
+                      id="user-email"
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="ahmed@superstore.com"
+                    />
+                  </div>
+                </div>
+
+                {!editingUser && (
+                  <div className="form-group user-password-field">
+                    <label htmlFor="user-password">Temporary Password</label>
+
+                    <input
+                      id="user-password"
+                      type="password"
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                      minLength="6"
+                      placeholder="Enter at least 6 characters"
+                    />
+
+                    <small className="form-helper-text">
+                      The staff member will use this password to sign in.
+                    </small>
+                  </div>
+                )}
+              </div>
+
+              <div className="user-form-divider" />
+
+              <div className="user-form-section">
+                <div className="user-form-section-title">
+                  <span>Access & Permissions</span>
+                  <small>Choose role and account status</small>
+                </div>
+
+                <div className="user-form-grid">
+                  <div className="form-group">
+                    <label htmlFor="user-role">Staff Role</label>
+
+                    <select
+                      id="user-role"
+                      name="role"
+                      value={form.role}
+                      onChange={handleChange}
+                    >
+                      <option value="admin">Administrator</option>
+
+                      <option value="manager">Manager</option>
+
+                      <option value="cashier">Cashier</option>
+
+                      <option value="inventory_staff">Inventory Staff</option>
+                    </select>
+
+                    <small className="form-helper-text">
+                      Determines which ERP modules the user can access.
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="user-status">Account Status</label>
+
+                    <select
+                      id="user-status"
+                      name="status"
+                      value={form.status}
+                      onChange={handleChange}
+                    >
+                      <option value="active">Active</option>
+
+                      <option value="inactive">Inactive</option>
+                    </select>
+
+                    <small className="form-helper-text">
+                      Inactive users cannot access the system.
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="user-form-footer">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={closeModal}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-btn user-submit-btn"
+                  disabled={saving}
+                >
+                  <UserPlus size={17} />
+
+                  {saving
+                    ? "Saving..."
+                    : editingUser
+                      ? "Update User"
+                      : "Create User"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-
-        <div className="user-form-footer">
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={closeModal}
-            disabled={saving}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="submit"
-            className="primary-btn user-submit-btn"
-            disabled={saving}
-          >
-            <UserPlus size={17} />
-
-            {saving
-              ? "Saving..."
-              : editingUser
-              ? "Update User"
-              : "Create User"}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
+      )}
 
       {showPasswordModal && (
         <div className="modal-overlay">
@@ -664,37 +555,25 @@ const Users = () => {
               <div>
                 <h2>Reset Password</h2>
 
-                <p>
-                  Set a new password for{" "}
-                  {passwordUser?.name}
-                </p>
+                <p>Set a new password for {passwordUser?.name}</p>
               </div>
 
               <button
                 className="modal-close"
-                onClick={() =>
-                  setShowPasswordModal(false)
-                }
+                onClick={() => setShowPasswordModal(false)}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form
-              onSubmit={handlePasswordReset}
-              className="erp-form"
-            >
+            <form onSubmit={handlePasswordReset} className="erp-form">
               <div className="form-group">
                 <label>New Password</label>
 
                 <input
                   type="password"
                   value={newPassword}
-                  onChange={(e) =>
-                    setNewPassword(
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength="6"
                   placeholder="Minimum 6 characters"
@@ -705,23 +584,13 @@ const Users = () => {
                 <button
                   type="button"
                   className="secondary-btn"
-                  onClick={() =>
-                    setShowPasswordModal(
-                      false
-                    )
-                  }
+                  onClick={() => setShowPasswordModal(false)}
                 >
                   Cancel
                 </button>
 
-                <button
-                  type="submit"
-                  className="primary-btn"
-                  disabled={saving}
-                >
-                  {saving
-                    ? "Resetting..."
-                    : "Reset Password"}
+                <button type="submit" className="primary-btn" disabled={saving}>
+                  {saving ? "Resetting..." : "Reset Password"}
                 </button>
               </div>
             </form>

@@ -22,7 +22,7 @@ const locationStockSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 locationStockSchema.index(
@@ -32,10 +32,7 @@ locationStockSchema.index(
   },
   {
     unique: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "LocationStock",
-  locationStockSchema
-);
+module.exports = mongoose.model("LocationStock", locationStockSchema);
